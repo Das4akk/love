@@ -14,7 +14,7 @@ canvas { display: block; width: 100vw; height: 100vh; }
 
 <!-- 🎵 МУЗЫКА -->
 <audio id="music" autoplay loop>
-  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a7c7b2.mp3?filename=romantic-11618.mp3" type="audio/mpeg">
+  <source src="https://www.dropbox.com/scl/fi/35roxnhmuj6r1vzy6lytl/lv_0_20260422224339.mp3?rlkey=db89mdxj9reeo09jrk3zvy00x&st=4dl787yu&raw=1" type="audio/mpeg">
 </audio>
 
 <canvas id="canvas"></canvas>
@@ -60,6 +60,61 @@ function lerp(a, b, t) {
 
 function animate() {
   time += 0.005
+
+  ctx.fillStyle = "#000"
+  ctx.fillRect(0, 0, W, H)
+
+  const min = Math.min(W, H)
+  const base = min * 0.04
+
+  const pulse = 1 + Math.sin(time * 1.2) * 0.05
+  const rot = time * 0.22
+  const fontSize = min * 0.02
+
+  const blend = (Math.sin(time * 0.4) + 1) / 2
+
+  const r = lerp(c1[0], c2[0], blend)
+  const g = lerp(c1[1], c2[1], blend)
+  const b = lerp(c1[2], c2[2], blend)
+
+  const color = `rgb(${r|0},${g|0},${b|0})`
+
+  for (let i = 0; i < density; i++) {
+
+    let t = points[i] + time * 0.225
+
+    let { x, y } = heart(t)
+
+    let rx = x * Math.cos(rot)
+    let z = x * Math.sin(rot)
+
+    const persp = 1 / (1 + z * 0.03)
+
+    const px = W / 2 + rx * base * persp * pulse
+    const py = H / 2 - y * base * persp * pulse
+
+    ctx.fillStyle = color
+    ctx.font = `bold ${fontSize * persp}px Georgia`
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+
+    ctx.fillText("I love you", px, py)
+  }
+
+  requestAnimationFrame(animate)
+}
+
+window.addEventListener("resize", resize)
+animate()
+
+// 🎵 если autoplay заблокирован — старт по клику
+window.addEventListener("click", () => {
+  document.getElementById("music").play()
+})
+</script>
+
+</body>
+</html>  time += 0.005
 
   ctx.fillStyle = "#000"
   ctx.fillRect(0, 0, W, H)
