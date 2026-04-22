@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Love you,Hart</title>
+<title>Love you, Heart</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -19,6 +19,7 @@ canvas {
 </head>
 <body>
 <canvas id="canvas"></canvas>
+
 <script>
 const canvas = document.getElementById("canvas")
 const ctx = canvas.getContext("2d")
@@ -33,13 +34,19 @@ function resize() {
 
 resize()
 
-for (let i = 0; i < 100; i++) {
-  objects.push({ t: i * (Math.PI * 2 / 100) })
+// УВЕЛИЧЕННАЯ ПЛОТНОСТЬ
+const density = 300
+
+for (let i = 0; i < density; i++) {
+  objects.push({ 
+    t: i * (Math.PI * 2 / density),
+    offset: Math.random() * 1000 // для разного градиента
+  })
 }
 
 function heart(t) {
   const minDim = Math.min(canvas.width, canvas.height)
-  const scale = minDim * 0.035
+  const scale = minDim * 0.04
 
   const x = 16 * Math.pow(Math.sin(t), 3)
   const y = (13 * Math.cos(t))
@@ -53,20 +60,38 @@ function heart(t) {
   }
 }
 
+let time = 0
+
 function animate() {
-  ctx.fillStyle = "#011735"
+  time += 0.02
+
+  // ЧЁРНЫЙ ФОН
+  ctx.fillStyle = "#000000"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
   const fontSize = Math.max(10, Math.min(canvas.width, canvas.height) * 0.025)
 
   for (let obj of objects) {
-    obj.t += 0.0028
+    obj.t += 0.0035
     const pos = heart(obj.t)
 
-    ctx.fillStyle = "#ff4d6d"
+    // АНИМИРОВАННЫЙ БОРДОВЫЙ ГРАДИЕНТ
+    const gradient = ctx.createLinearGradient(
+      pos.x - 40, pos.y - 40,
+      pos.x + 40, pos.y + 40
+    )
+
+    const shift = (Math.sin(time + obj.offset) + 1) / 2
+
+    gradient.addColorStop(0, `rgb(${120 + 80*shift}, 0, ${40 + 40*shift})`)
+    gradient.addColorStop(0.5, `rgb(${180 + 50*shift}, 0, ${60 + 60*shift})`)
+    gradient.addColorStop(1, `rgb(${90 + 60*shift}, 0, ${30 + 30*shift})`)
+
+    ctx.fillStyle = gradient
     ctx.font = `bold ${fontSize}px Georgia`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
+
     ctx.fillText(text, pos.x, pos.y)
   }
 
