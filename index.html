@@ -11,6 +11,12 @@ canvas { display: block; width: 100vw; height: 100vh; }
 </style>
 </head>
 <body>
+
+<!-- 🎵 МУЗЫКА -->
+<audio id="music" autoplay loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a7c7b2.mp3?filename=romantic-11618.mp3" type="audio/mpeg">
+</audio>
+
 <canvas id="canvas"></canvas>
 
 <script>
@@ -25,7 +31,7 @@ function resize() {
 }
 resize()
 
-const density = 140 // ⬅️ оптимизация (было 180)
+const density = 140
 
 const points = []
 for (let i = 0; i < density; i++) {
@@ -43,12 +49,8 @@ function heart(t) {
   return { x, y }
 }
 
-// 3 цвета режимов
-const palettes = [
-  [59, 0, 18],   // винный
-  [42, 0, 13],   // почти чёрный бордовый
-  [90, 10, 29]   // светлее + для свечения
-]
+const c1 = [59, 0, 18]
+const c2 = [42, 0, 13]
 
 let time = 0
 
@@ -57,7 +59,7 @@ function lerp(a, b, t) {
 }
 
 function animate() {
-  time += 0.01
+  time += 0.005
 
   ctx.fillStyle = "#000"
   ctx.fillRect(0, 0, W, H)
@@ -65,22 +67,21 @@ function animate() {
   const min = Math.min(W, H)
   const base = min * 0.04
 
-  const pulse = 1 + Math.sin(time * 2) * 0.04
-  const rot = time * 0.45
-
+  const pulse = 1 + Math.sin(time * 1.2) * 0.05
+  const rot = time * 0.22
   const fontSize = min * 0.02
 
-  // 🔥 плавное переключение режимов
-  const cycle = (Math.sin(time * 0.25) + 1) / 2
+  const blend = (Math.sin(time * 0.4) + 1) / 2
 
-  const r = lerp(palettes[0][0], palettes[2][0], cycle)
-  const g = lerp(palettes[0][1], palettes[2][1], cycle)
-  const b = lerp(palettes[0][2], palettes[2][2], cycle)
+  const r = lerp(c1[0], c2[0], blend)
+  const g = lerp(c1[1], c2[1], blend)
+  const b = lerp(c1[2], c2[2], blend)
 
   const color = `rgb(${r|0},${g|0},${b|0})`
 
   for (let i = 0; i < density; i++) {
-    let t = points[i] + time * 0.9
+
+    let t = points[i] + time * 0.225
 
     let { x, y } = heart(t)
 
@@ -93,7 +94,6 @@ function animate() {
     const py = H / 2 - y * base * persp * pulse
 
     ctx.fillStyle = color
-
     ctx.font = `bold ${fontSize * persp}px Georgia`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
@@ -106,6 +106,12 @@ function animate() {
 
 window.addEventListener("resize", resize)
 animate()
+
+// 🎵 если autoplay заблокирован — старт по клику
+window.addEventListener("click", () => {
+  document.getElementById("music").play()
+})
 </script>
+
 </body>
 </html>
