@@ -6,126 +6,105 @@
 <title>Love you, Heart</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-  overflow: hidden;
-  background: #000000;
-}
-canvas {
-  display: block;
-  width: 100vw;
-  height: 100vh;
-}
-.hint {
-  position: fixed;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #666;
-  font-family: Arial;
-  font-size: 12px;
-}
+body { overflow: hidden; background: #000; }
+canvas { display: block; width: 100vw; height: 100vh; }
 </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
-<div class="hint">1 — винный | 2 — почти чёрный | 3 — со свечением</div>
 
 <script>
 const canvas = document.getElementById("canvas")
 const ctx = canvas.getContext("2d")
 
-const text = "I love you"
-let objects = []
+let W, H
 
 function resize() {
-  canvas.width = window.innerWidth
-  canvas.height = window.innerHeight
+  W = canvas.width = window.innerWidth
+  H = canvas.height = window.innerHeight
 }
-
 resize()
 
-const density = 180
+const density = 140 // ⬅️ оптимизация (было 180)
 
+const points = []
 for (let i = 0; i < density; i++) {
-  objects.push({ 
-    t: i * (Math.PI * 2 / density)
-  })
+  points.push(i * (Math.PI * 2 / density))
 }
 
 function heart(t) {
   const x = 16 * Math.pow(Math.sin(t), 3)
-  const y = (13 * Math.cos(t))
-           - (5 * Math.cos(2 * t))
-           - (2 * Math.cos(3 * t))
-           - (Math.cos(4 * t))
+  const y =
+    13 * Math.cos(t) -
+    5 * Math.cos(2 * t) -
+    2 * Math.cos(3 * t) -
+    Math.cos(4 * t)
+
   return { x, y }
 }
 
-let time = 0
-let mode = 1 // текущий стиль
+// 3 цвета режимов
+const palettes = [
+  [59, 0, 18],   // винный
+  [42, 0, 13],   // почти чёрный бордовый
+  [90, 10, 29]   // светлее + для свечения
+]
 
-// переключение режимов
-window.addEventListener("keydown", (e) => {
-  if (e.key === "1") mode = 1
-  if (e.key === "2") mode = 2
-  if (e.key === "3") mode = 3
-})
+let time = 0
+
+function lerp(a, b, t) {
+  return a + (b - a) * t
+}
 
 function animate() {
-  time += 0.02
+  time += 0.01
 
-  ctx.fillStyle = "#000000"
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillStyle = "#000"
+  ctx.fillRect(0, 0, W, H)
 
-  const minDim = Math.min(canvas.width, canvas.height)
-  const baseScale = minDim * 0.04
+  const min = Math.min(W, H)
+  const base = min * 0.04
 
-  const pulse = 1 + Math.sin(time * 2) * 0.05
-  const rotation = time * 0.5
+  const pulse = 1 + Math.sin(time * 2) * 0.04
+  const rot = time * 0.45
 
-  const fontSize = Math.max(10, minDim * 0.022)
+  const fontSize = min * 0.02
 
-  for (let obj of objects) {
-    obj.t += 0.003
-    let { x, y } = heart(obj.t)
+  // 🔥 плавное переключение режимов
+  const cycle = (Math.sin(time * 0.25) + 1) / 2
 
-    let rotatedX = x * Math.cos(rotation)
-    let z = x * Math.sin(rotation)
+  const r = lerp(palettes[0][0], palettes[2][0], cycle)
+  const g = lerp(palettes[0][1], palettes[2][1], cycle)
+  const b = lerp(palettes[0][2], palettes[2][2], cycle)
 
-    const perspective = 1 / (1 + z * 0.03)
+  const color = `rgb(${r|0},${g|0},${b|0})`
 
-    const finalX = canvas.width / 2 + rotatedX * baseScale * perspective * pulse
-    const finalY = canvas.height / 2 - y * baseScale * perspective * pulse
+  for (let i = 0; i < density; i++) {
+    let t = points[i] + time * 0.9
 
-    // СТИЛИ
-    if (mode === 1) {
-      ctx.fillStyle = "#3b0012"
-      ctx.shadowBlur = 0
-    }
+    let { x, y } = heart(t)
 
-    if (mode === 2) {
-      ctx.fillStyle = "#2a000d"
-      ctx.shadowBlur = 0
-    }
+    let rx = x * Math.cos(rot)
+    let z = x * Math.sin(rot)
 
-    if (mode === 3) {
-      ctx.fillStyle = "#5a0a1d"
-      ctx.shadowColor = "#8a1a2f"
-      ctx.shadowBlur = 12
-    }
+    const persp = 1 / (1 + z * 0.03)
 
-    ctx.font = `bold ${fontSize * perspective}px Georgia`
+    const px = W / 2 + rx * base * persp * pulse
+    const py = H / 2 - y * base * persp * pulse
+
+    ctx.fillStyle = color
+
+    ctx.font = `bold ${fontSize * persp}px Georgia`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
 
-    ctx.fillText(text, finalX, finalY)
+    ctx.fillText("I love you", px, py)
   }
 
   requestAnimationFrame(animate)
 }
 
 window.addEventListener("resize", resize)
-
 animate()
 </script>
 </body>
