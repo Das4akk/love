@@ -34,30 +34,24 @@ function resize() {
 
 resize()
 
-// УВЕЛИЧЕННАЯ ПЛОТНОСТЬ
-const density = 200
+// УМЕНЬШЕННАЯ ПЛОТНОСТЬ
+const density = 180
 
 for (let i = 0; i < density; i++) {
   objects.push({ 
     t: i * (Math.PI * 2 / density),
-    offset: Math.random() * 1000 // для разного градиента
+    offset: Math.random() * 1000
   })
 }
 
 function heart(t) {
-  const minDim = Math.min(canvas.width, canvas.height)
-  const scale = minDim * 0.04
-
   const x = 16 * Math.pow(Math.sin(t), 3)
   const y = (13 * Math.cos(t))
            - (5 * Math.cos(2 * t))
            - (2 * Math.cos(3 * t))
            - (Math.cos(4 * t))
 
-  return {
-    x: canvas.width / 2 + x * scale,
-    y: canvas.height / 2 - y * scale
-  }
+  return { x, y }
 }
 
 let time = 0
@@ -65,34 +59,52 @@ let time = 0
 function animate() {
   time += 0.02
 
-  // ЧЁРНЫЙ ФОН
   ctx.fillStyle = "#000000"
   ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  const fontSize = Math.max(10, Math.min(canvas.width, canvas.height) * 0.025)
+  const minDim = Math.min(canvas.width, canvas.height)
+  const baseScale = minDim * 0.04
+
+  // ЭФФЕКТ "БИЕНИЯ"
+  const pulse = 1 + Math.sin(time * 2) * 0.05
+
+  // ВРАЩЕНИЕ
+  const rotation = time * 0.5
+
+  const fontSize = Math.max(10, minDim * 0.022)
 
   for (let obj of objects) {
-    obj.t += 0.0035
-    const pos = heart(obj.t)
+    obj.t += 0.003
+    let { x, y } = heart(obj.t)
 
-    // АНИМИРОВАННЫЙ БОРДОВЫЙ ГРАДИЕНТ
+    // 3D ВРАЩЕНИЕ (ось Y)
+    let rotatedX = x * Math.cos(rotation)
+    let z = x * Math.sin(rotation)
+
+    // ПЕРСПЕКТИВА
+    const perspective = 1 / (1 + z * 0.03)
+
+    const finalX = canvas.width / 2 + rotatedX * baseScale * perspective * pulse
+    const finalY = canvas.height / 2 - y * baseScale * perspective * pulse
+
+    // ТЁМНЫЙ БОРДОВЫЙ ГРАДИЕНТ
     const gradient = ctx.createLinearGradient(
-      pos.x - 40, pos.y - 40,
-      pos.x + 40, pos.y + 40
+      finalX - 30, finalY - 30,
+      finalX + 30, finalY + 30
     )
 
     const shift = (Math.sin(time + obj.offset) + 1) / 2
 
-    gradient.addColorStop(0, `rgb(${120 + 80*shift}, 0, ${40 + 40*shift})`)
-    gradient.addColorStop(0.5, `rgb(${180 + 50*shift}, 0, ${60 + 60*shift})`)
-    gradient.addColorStop(1, `rgb(${90 + 60*shift}, 0, ${30 + 30*shift})`)
+    gradient.addColorStop(0, `rgb(${70 + 40*shift}, 0, ${20 + 20*shift})`)
+    gradient.addColorStop(0.5, `rgb(${100 + 30*shift}, 0, ${30 + 30*shift})`)
+    gradient.addColorStop(1, `rgb(${50 + 30*shift}, 0, ${15 + 15*shift})`)
 
     ctx.fillStyle = gradient
-    ctx.font = `bold ${fontSize}px Georgia`
+    ctx.font = `bold ${fontSize * perspective}px Georgia`
     ctx.textAlign = "center"
     ctx.textBaseline = "middle"
 
-    ctx.fillText(text, pos.x, pos.y)
+    ctx.fillText(text, finalX, finalY)
   }
 
   requestAnimationFrame(animate)
